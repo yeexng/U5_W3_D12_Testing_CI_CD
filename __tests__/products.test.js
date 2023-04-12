@@ -25,6 +25,11 @@ const notValidProduct = {
   price: 10000,
 };
 
+const validUpdate = {
+  name: "GPhone",
+  price: 100,
+};
+
 let productId;
 const invalidId = "123456123456123456123456";
 
@@ -57,6 +62,8 @@ describe("Test Products APIs", () => {
       .send(validProduct)
       .expect(201);
     expect(response.body._id).toBeDefined();
+    productId = response.body._id;
+    console.log("ProductId is", productId);
   });
 
   it("Should test that POST /products returns 400 if a not valid product is provided in req.body", async () => {
@@ -70,14 +77,41 @@ describe("Test Products APIs", () => {
   });
 
   //3. Get by ID
-  it("SHould test that return 404 with non-existing id", async () => {
+  it("Should test that return 404 with non-existing id", async () => {
     const response = await client.get(`/products/${invalidId}`);
     expect(response.status).toBe(404);
   });
 
-  it("Should test that GET /products/:id return 200 and a body", async () => {
+  it("Should test that GET /products/:id with a valid id returns 204 and a valid body", async () => {
     const response = await client.get(`/products/${productId}`).expect(200);
     expect(response.body).toBeDefined();
     expect(response.body._id).toBe(productId);
+  });
+
+  it("Should test that GET /products/:id with an invalid id returns 404", async () => {
+    await client.get(`/products/${invalidId}`).expect(404);
+  });
+
+  //4. Delete By ID
+  it("Should test that DELETE /products/:id with an invalid id returns 404", async () => {
+    await client.delete(`/products/${invalidId}`).expect(404);
+  });
+
+  it("Should test that DELETE /products/:id returns 204", async () => {
+    await client.delete(`/products/${productId}`).expect(204);
+  });
+
+  //5. Update by ID
+  it("Should test that PUT /products/:id with a valid id to be accepted and is Updated in String", async () => {
+    const response = await client
+      .put(`/products/${productId}`)
+      .send(validUpdate)
+      .expect(200);
+    expect(response.body.name).toBe(validUpdate.name);
+    expect(typeof response.body.name).toBe("string");
+  });
+
+  it("Should test that PUT /products/:id with an invalid id to return 404", async () => {
+    await client.put(`/products/${invalidId}`).send(validUpdate).expect(404);
   });
 });
